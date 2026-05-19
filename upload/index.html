@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Upload — Shop Store</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../assets/css/upload.css" />
+
+  <style>
+    /* Extra inline styles for auth-layout hidden state */
+    .auth-layout.hidden { display: none; }
+    #lock-screen { display: none; }
+    #lock-screen.visible { display: block; animation: auth-in 0.5s ease both; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shake {
+      0%,100% { transform:translateX(0); }
+      20%,60% { transform:translateX(-8px); }
+      40%,80% { transform:translateX(8px); }
+    }
+    /* Upload toast */
+    .upload-toast {
+      display: none;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 16px;
+    }
+    .upload-toast.success { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #10b981; }
+    .upload-toast.error   { background: rgba(239,68,68,0.12);   border: 1px solid rgba(239,68,68,0.3);   color: #ef4444; }
+    /* JSON output block */
+    #json-output-wrap { display: none; margin-top: 20px; }
+    #json-output {
+      background: #040509;
+      border: 1px solid rgba(0,229,255,0.15);
+      border-radius: 10px;
+      padding: 16px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.73rem;
+      color: #00e5ff;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .copy-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 10px;
+      padding: 9px 18px;
+      background: rgba(0,229,255,0.1);
+      border: 1px solid rgba(0,229,255,0.2);
+      border-radius: 8px;
+      color: #00e5ff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { background: rgba(0,229,255,0.18); }
+  </style>
+</head>
+<body>
+
+<!-- ─── MATRIX BACKGROUND ─── -->
+<canvas id="matrix-canvas" aria-hidden="true"></canvas>
+
+<!-- ─── SECURITY BOOT SCREEN ─── -->
+<div id="boot-screen" role="status" aria-live="polite">
+  <div class="boot-logo" aria-hidden="true">🛡️</div>
+  <div class="boot-title">Shop Store Admin</div>
+  <div class="boot-log" id="boot-log" aria-label="Security boot log"></div>
+  <div class="boot-progress-wrap">
+    <div class="boot-progress" id="boot-progress"></div>
+  </div>
+  <div class="boot-status" id="boot-status">Initializing...</div>
+</div>
+
+<!-- ─── AUTH LAYOUT ─── -->
+<div class="auth-layout" id="auth-layout">
+
+  <!-- ── STEP 1: PASSWORD ── -->
+  <div class="auth-card" id="step-1" role="main" aria-label="Password authentication">
+    <div class="auth-header">
+      <div class="auth-icon" aria-hidden="true">🔐</div>
+      <h1 class="auth-title">Admin Access</h1>
+      <p class="auth-subtitle">Enter your admin password to continue</p>
+    </div>
+
+    <div class="auth-step-indicator" aria-label="Step 1 of 2">
+      <div class="step-dot active" title="Step 1: Password"></div>
+      <div class="step-line"></div>
+      <div class="step-dot" title="Step 2: PIN"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="pw-input">🔑 Password</label>
+      <input
+        type="password"
+        id="pw-input"
+        class="form-input"
+        placeholder="Enter admin password…"
+        autocomplete="current-password"
+        aria-required="true"
+        aria-describedby="attempts-warn"
+      />
+    </div>
+
+    <div class="attempts-warn" id="attempts-warn" role="alert"></div>
+
+    <button class="auth-btn" onclick="submitPassword()" aria-label="Verify password">
+      🔓 Verify Password
+    </button>
+  </div>
+
+  <!-- ── STEP 2: PIN ── -->
+  <div class="auth-card" id="step-2" role="main" aria-label="PIN authentication">
+    <div class="auth-header">
+      <div class="auth-icon" aria-hidden="true">🔢</div>
+      <h1 class="auth-title">Enter PIN</h1>
+      <p class="auth-subtitle">Enter your 6-digit admin PIN</p>
+    </div>
+
+    <div class="auth-step-indicator" aria-label="Step 2 of 2">
+      <div class="step-dot done" title="Step 1: Complete"></div>
+      <div class="step-line"></div>
+      <div class="step-dot active" title="Step 2: PIN"></div>
+    </div>
+
+    <!-- PIN dots display -->
+    <div class="pin-display" role="status" aria-label="PIN entry progress">
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+    </div>
+
+    <!-- PIN Pad -->
+    <div class="pin-pad" role="group" aria-label="PIN keypad">
+      <button class="pin-key" onclick="pressPin('1')" aria-label="1">1</button>
+      <button class="pin-key" onclick="pressPin('2')" aria-label="2">2</button>
+      <button class="pin-key" onclick="pressPin('3')" aria-label="3">3</button>
+      <button class="pin-key" onclick="pressPin('4')" aria-label="4">4</button>
+      <button class="pin-key" onclick="pressPin('5')" aria-label="5">5</button>
+      <button class="pin-key" onclick="pressPin('6')" aria-label="6">6</button>
+      <button class="pin-key" onclick="pressPin('7')" aria-label="7">7</button>
+      <button class="pin-key" onclick="pressPin('8')" aria-label="8">8</button>
+      <button class="pin-key" onclick="pressPin('9')" aria-label="9">9</button>
+      <button class="pin-key danger" onclick="clearPin()" aria-label="Clear PIN">CLR</button>
+      <button class="pin-key" onclick="pressPin('0')" aria-label="0">0</button>
+      <button class="pin-key danger" onclick="backspacePin()" aria-label="Delete last digit">⌫</button>
+    </div>
+
+    <div class="attempts-warn" id="pin-attempts-warn" role="alert"></div>
+  </div>
+
+  <!-- ── LOCK SCREEN ── -->
+  <div class="auth-card" id="lock-screen" role="alert" aria-live="assertive">
+    <div class="lock-screen">
+      <div class="lock-icon" aria-hidden="true">🔒</div>
+      <h2 style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:var(--danger);margin-bottom:8px">
+        Account Locked
+      </h2>
+      <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:16px">
+        Too many failed attempts. Please wait:
+      </p>
+      <div class="lock-timer" id="lock-timer" aria-live="polite">15:00</div>
+      <p class="lock-desc">Access will automatically restore after the timer expires.</p>
+    </div>
+  </div>
+
+</div><!-- /auth-layout -->
+
+<!-- ─── UPLOAD DASHBOARD ─── -->
+<div class="upload-layout" id="upload-dashboard" role="main" aria-label="App upload dashboard">
+
+  <div class="upload-header">
+    <div>
+      <h1 class="upload-title">📦 Publish New App</h1>
+      <p class="upload-subtitle">Upload an APK and add it to the Shop Store catalogue</p>
+    </div>
+    <div class="admin-badge">
+      <span class="admin-badge-dot" aria-hidden="true"></span>
+      Admin Mode Active
+    </div>
+  </div>
+
+  <div class="upload-card">
+    <form id="upload-form" onsubmit="submitApp(event)" novalidate>
+
+      <!-- App Name & Version -->
+      <div class="form-row">
+        <div class="form-group-upload">
+          <label class="form-label-upload" for="app-title">📱 App Title *</label>
+          <input type="text" id="app-title" class="form-input-upload"
+            placeholder="e.g. Balance Book Pro" required maxlength="60" />
+        </div>
+        <div class="form-group-upload">
+          <label class="form-label-upload" for="app-version">🏷️ Version *</label>
+          <input type="text" id="app-version" class="form-input-upload"
+            placeholder="e.g. 1.0.0" required maxlength="20" />
+        </div>
+      </div>
+
+      <!-- Category & Developer -->
+      <div class="form-row">
+        <div class="form-group-upload">
+          <label class="form-label-upload" for="app-category">📂 Category *</label>
+          <select id="app-category" class="form-select-upload" required>
+            <option value="">Select category…</option>
+            <option value="Business">💼 Business</option>
+            <option value="Finance">💰 Finance</option>
+            <option value="Tools">🔧 Tools</option>
+            <option value="Productivity">⚡ Productivity</option>
+            <option value="Social">💬 Social</option>
+            <option value="Education">📚 Education</option>
+            <option value="Shopping">🛒 Shopping</option>
+            <option value="Health">❤️ Health</option>
+            <option value="Entertainment">🎬 Entertainment</option>
+          </select>
+        </div>
+        <div class="form-group-upload">
+          <label class="form-label-upload" for="app-developer">👤 Developer</label>
+          <input type="text" id="app-developer" class="form-input-upload"
+            value="AmeenDesigns" maxlength="50" />
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group-upload">
+        <label class="form-label-upload" for="app-desc">📝 Description *</label>
+        <textarea id="app-desc" class="form-textarea-upload"
+          placeholder="Describe what the app does, who it's for, and its key features…"
+          required maxlength="500"></textarea>
+      </div>
+
+      <hr class="section-divider" />
+
+      <!-- APK Upload -->
+      <div class="form-group-upload">
+        <label class="form-label-upload">📦 APK File *</label>
+        <div class="drop-zone" role="button" tabindex="0" aria-label="Drop APK file here or click to browse">
+          <input type="file" id="apk-file" accept=".apk" aria-label="Select APK file" />
+          <div class="drop-icon" aria-hidden="true">📦</div>
+          <div class="drop-title">Drop your APK here or click to browse</div>
+          <div class="drop-subtitle">Accepts .apk files only</div>
+        </div>
+        <div class="file-chosen" id="apk-chosen" style="display:none">
+          ✅ <span class="chosen-name"></span>
+        </div>
+        <div class="upload-progress-wrap" id="upload-progress">
+          <div class="upload-progress-bar" id="upload-progress-bar"></div>
+        </div>
+      </div>
+
+      <!-- Icon Upload -->
+      <div class="form-group-upload">
+        <label class="form-label-upload">🖼️ App Icon</label>
+        <div class="drop-zone" role="button" tabindex="0" aria-label="Drop icon here or click to browse">
+          <input type="file" id="icon-file" accept="image/*" aria-label="Select app icon" />
+          <div class="drop-icon" aria-hidden="true">🖼️</div>
+          <div class="drop-title">Drop icon or click to browse</div>
+          <div class="drop-subtitle">PNG/JPG, recommended 512×512px</div>
+        </div>
+        <div id="icon-preview" style="margin-top:10px;display:flex;justify-content:center;"></div>
+      </div>
+
+      <!-- Screenshots Upload -->
+      <div class="form-group-upload">
+        <label class="form-label-upload">
+          📸 Screenshots * (min. 2, max. 5)
+          <span id="ss-count" style="color:var(--accent);margin-left:8px"></span>
+        </label>
+        <div class="drop-zone" role="button" tabindex="0" aria-label="Drop screenshots here or click to browse">
+          <input type="file" id="screenshots-input" accept="image/*" multiple aria-label="Select screenshots" />
+          <div class="drop-icon" aria-hidden="true">📸</div>
+          <div class="drop-title">Drop screenshots or click to browse</div>
+          <div class="drop-subtitle">Upload 2–5 screenshots (PNG/JPG)</div>
+        </div>
+        <div class="drop-preview" id="screenshots-preview"></div>
+      </div>
+
+      <!-- Featured toggle -->
+      <div class="form-group-upload" style="display:flex;align-items:center;gap:12px">
+        <input type="checkbox" id="app-featured" style="width:18px;height:18px;accent-color:var(--accent)" />
+        <label for="app-featured" class="form-label-upload" style="margin:0;cursor:pointer">
+          ⭐ Mark as Featured App
+        </label>
+      </div>
+
+      <!-- Toast -->
+      <div class="upload-toast" id="upload-toast" role="alert" aria-live="assertive"></div>
+
+      <!-- Submit -->
+      <button type="submit" class="submit-btn" id="submit-btn">
+        🚀 Publish App
+      </button>
+
+    </form>
+
+    <!-- JSON Output (since no PHP backend) -->
+    <div id="json-output-wrap" aria-live="polite">
+      <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:8px">
+        ⚠️ This is a static site — no server to write files. Copy this JSON entry and manually add it to <code style="color:var(--accent)">/data/apps.json</code> inside the <code style="color:var(--accent)">"apps"</code> array. Then place your APK in <code style="color:var(--accent)">/apps/</code>, icon in <code style="color:var(--accent)">/images/icons/</code>, and screenshots in <code style="color:var(--accent)">/images/screenshots/</code>.
+      </p>
+      <pre id="json-output" tabindex="0" aria-label="Generated JSON entry"></pre>
+      <button class="copy-btn" onclick="copyJSON()" aria-label="Copy JSON to clipboard">
+        📋 Copy JSON Entry
+      </button>
+    </div>
+  </div>
+
+  <!-- Existing Apps List -->
+  <div class="uploaded-apps">
+    <div class="uploaded-apps-title">
+      📂 Apps in Store
+    </div>
+    <div id="apps-list">
+      <p style="color:var(--text-dim);font-size:0.8rem;padding:20px;text-align:center">Loading…</p>
+    </div>
+  </div>
+
+</div><!-- /upload-dashboard -->
+
+<!-- ─── SCRIPTS ─── -->
+<script src="../assets/js/upload.js"></script>
+
+</body>
+</html>

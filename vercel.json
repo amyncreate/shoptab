@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "name": "shop-store",
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" }
+      ]
+    },
+    {
+      "source": "/upload/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/upload", "destination": "/upload/index.html" },
+    { "source": "/upload/", "destination": "/upload/index.html" }
+  ],
+  "redirects": [],
+  "cleanUrls": true,
+  "trailingSlash": false
+}
