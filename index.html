@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shop Store</title>
+  <meta name="description" content="Apps Market For Shop Owners — fast, simple, reliable business tools." />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Offline Banner -->
+  <div id="offline-banner" class="offline-banner hidden">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+    You are offline. connect to internet to install app.
+  </div>
+
+  <!-- Loading Spinner -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Main Content -->
+  <main id="main-content" class="main hidden">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="28" height="28" rx="8" fill="#0F3D4C"/>
+            <path d="M7 10h14M7 14h14M7 18h9" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span>Shop Store</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-inner">
+        <p class="hero-eyebrow">Welcome To</p>
+        <h1 class="hero-title">SHOP STORE</h1>
+        <p class="hero-subtitle">
+          <span id="typing-text"></span><span class="cursor">|</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- App Section -->
+    <section class="apps-section">
+      <div class="section-inner">
+        <h2 class="section-label">Available App</h2>
+        <div id="app-card-container"></div>
+        <div id="error-message" class="error-message hidden">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <p>App temporarily unavailable. Please try again later.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>&copy; <span id="year"></span> ShopTab. All rights reserved.</p>
+    </footer>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
