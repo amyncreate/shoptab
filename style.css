@@ -248,7 +248,7 @@ body {
   width: 100%;
   padding: .9rem 1.5rem;
   background: var(--white);
-  color: #fff;
+  color: #000;
   font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 600;
