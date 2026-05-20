@@ -262,6 +262,7 @@ body {
 }
 
 .install-btn:hover {
+   color: #fff;
   background: var(--blue-dark);
   box-shadow: 0 4px 14px rgba(26, 221, 255, 0.322);
   transform: translateY(-1px);
