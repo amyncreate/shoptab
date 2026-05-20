@@ -247,7 +247,7 @@ body {
   gap: .55rem;
   width: 100%;
   padding: .9rem 1.5rem;
-  background: var(--blue);
+  background: var(--white);
   color: #fff;
   font-family: var(--font-body);
   font-size: 1rem;
